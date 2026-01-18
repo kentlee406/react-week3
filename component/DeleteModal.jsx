@@ -1,0 +1,74 @@
+import { useState, useEffect, useRef } from "react";
+import axios from "axios";
+import { Modal } from "bootstrap";
+const API_BASE = import.meta.env.VITE_API_BASE;
+const API_PATH = import.meta.env.VITE_API_PATH;
+
+function DeleteModal({ getProductData, tempProduct }) {
+  const handleDelete = async () => {
+    try {
+      // 確保 API_BASE 和 API_PATH 已定義或從 props 傳入
+      await axios.delete(
+        `${API_BASE}/api/${API_PATH}/admin/product/${tempProduct.id}`,
+      );
+
+      alert("刪除成功！");
+
+      // 1. 刷新父組件的產品列表
+      await getProductData();
+    } catch (error) {
+      const message = error.response?.data?.message || "發生錯誤";
+      alert(`刪除失敗：${message}`);
+    }
+  };
+
+  return (
+    <div
+      className="modal fade"
+      id="deleteModal"
+      tabIndex="-1"
+      aria-labelledby="deleteModalLabel"
+      aria-hidden="true"
+    >
+      <div className="modal-dialog">
+        <div className="modal-content border-0">
+          <div className="modal-header bg-danger text-white">
+            <h5 className="modal-title" id="deleteModalLabel">
+              <span>刪除產品</span>
+            </h5>
+            <button
+              type="button"
+              className="btn-close"
+              data-bs-dismiss="modal"
+              aria-label="Close"
+            ></button>
+          </div>
+          <div className="modal-body">
+            是否刪除
+            <strong className="text-danger"> {tempProduct.title} </strong>
+            (刪除後將無法恢復)。
+          </div>
+          <div className="modal-footer">
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              data-bs-dismiss="modal"
+            >
+              取消
+            </button>
+            <button
+              type="button"
+              className="btn btn-danger"
+              onClick={handleDelete}
+              data-bs-dismiss="modal"
+            >
+              確認刪除
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default DeleteModal;
