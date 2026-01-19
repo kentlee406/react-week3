@@ -5,13 +5,24 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 const API_PATH = import.meta.env.VITE_API_PATH;
 
 function ProductModal({ mode, tempProduct, getProductData }) {
-  const [modalData, setModalData] = useState(tempProduct);
+  const [modalData, setModalData] = useState({
+    ...tempProduct,
+    imagesUrl: tempProduct.imagesUrl || ["", "", "", ""],
+  });
+
+  const [imageInput, setImageInput] = useState(""); // 暫存輸入框的網址
   const modalElement = useRef(null);
   const modalInstance = useRef(null);
 
-  // 1. 重要：當外部傳入的 tempProduct 改變時，更新內部的 modalData
   useEffect(() => {
-    setModalData(tempProduct);
+    // 當外部傳入資料改變，確保 imagesUrl 格式正確（補足 4 個空位以便 UI 呈現）
+    const images = tempProduct.imagesUrl ? [...tempProduct.imagesUrl] : [];
+    while (images.length < 4) images.push("");
+
+    setModalData({
+      ...tempProduct,
+      imagesUrl: images,
+    });
   }, [tempProduct]);
 
   // 2. 初始化 Modal (僅一次)
@@ -42,6 +53,29 @@ function ProductModal({ mode, tempProduct, getProductData }) {
             ? Number(value)
             : value,
     }));
+  };
+
+  // 新增圖片網址邏輯
+  const handleAddImage = () => {
+    if (!imageInput.trim()) return;
+
+    const newImages = [...modalData.imagesUrl];
+    const emptyIndex = newImages.findIndex((url) => url === "");
+
+    if (emptyIndex !== -1) {
+      newImages[emptyIndex] = imageInput;
+      setModalData((prev) => ({ ...prev, imagesUrl: newImages }));
+      setImageInput(""); // 清空輸入框
+    } else {
+      alert("最多只能上傳 4 張圖片");
+    }
+  };
+
+  // 移除圖片邏輯
+  const handleRemoveImage = (index) => {
+    const newImages = [...modalData.imagesUrl];
+    newImages[index] = "";
+    setModalData((prev) => ({ ...prev, imagesUrl: newImages }));
   };
 
   const handleSave = async () => {
@@ -213,50 +247,73 @@ function ProductModal({ mode, tempProduct, getProductData }) {
                   </form>
                 </div>
 
+                {/* 右側圖片上傳與預覽 */}
                 <div className="col-lg-5">
-                  <label className="form-label fw-bold">
-                    上傳圖片 (最多 4 張)
-                  </label>
+                  <label className="form-label fw-bold">商品主圖 (URL)</label>
+                  <input
+                    type="text"
+                    className="form-control mb-3"
+                    id="imageUrl"
+                    value={modalData.imageUrl || ""}
+                    onChange={handleInputChange}
+                    placeholder="主圖連結"
+                  />
 
-                  <div className="input-group mb-2">
+                  <label className="form-label fw-bold">
+                    其他圖片 (最多 4 張)
+                  </label>
+                  <div className="input-group mb-3">
                     <input
                       type="text"
                       className="form-control"
                       placeholder="輸入圖片連結"
-                      id="imageUrl"
-                      value={modalData.imageUrl || ""}
-                      onChange={handleInputChange}
+                      value={imageInput}
+                      onChange={(e) => setImageInput(e.target.value)}
                     />
-                    <button className="btn btn-outline-secondary" type="button">
+                    <button
+                      className="btn btn-outline-primary"
+                      type="button"
+                      onClick={handleAddImage}
+                    >
                       新增連結
                     </button>
                   </div>
 
-                  <div className="input-group mb-4">
-                    <input
-                      type="file"
-                      className="form-control"
-                      id="imagesUrl"
-                    />
-                    <button className="btn btn-outline-secondary" type="button">
-                      上傳圖片
-                    </button>
-                  </div>
-
-                  <p className="fw-bold">已上傳圖片</p>
                   <div className="row g-2">
-                    <div className="col-6 col-md-4">
-                      <div className="img-preview-box">Image 1</div>
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <div className="img-preview-box">Image 2</div>
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <div className="img-preview-box">Image 3</div>
-                    </div>
-                    <div className="col-6 col-md-4">
-                      <div className="img-preview-box">Image 4</div>
-                    </div>
+                    {modalData.imagesUrl.map((url, index) => (
+                      <div className="col-6" key={index}>
+                        <div
+                          className="border rounded bg-light d-flex align-items-center justify-content-center position-relative"
+                          style={{ height: "100px", overflow: "hidden" }}
+                        >
+                          {url ? (
+                            <>
+                              <img
+                                src={url}
+                                alt="預覽圖"
+                                className="w-100 h-100 object-fit-cover"
+                                onError={(e) => {
+                                  e.target.src =
+                                    "https://via.placeholder.com/150?text=Invalid+URL";
+                                }} // 錯誤處理
+                              />
+                              <button
+                                type="button"
+                                className="btn btn-danger btn-sm position-absolute top-0 end-0 p-1"
+                                style={{ fontSize: "10px", lineHeight: 1 }}
+                                onClick={() => handleRemoveImage(index)}
+                              >
+                                ✕
+                              </button>
+                            </>
+                          ) : (
+                            <small className="text-muted">
+                              圖片 {index + 1}
+                            </small>
+                          )}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>
