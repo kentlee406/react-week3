@@ -81,6 +81,10 @@ function App() {
     } else {
       setTempProduct(product);
     }
+    // 手動取得該 Modal 實例並顯示
+    const modalElement = document.getElementById("ProductModal");
+    const instance = Modal.getOrCreateInstance(modalElement);
+    instance.show();
   };
 
   const getProductData = async () => {
@@ -130,8 +134,6 @@ function App() {
               <button
                 className="btn btn-success"
                 onClick={() => openModal("create")}
-                data-bs-toggle="modal"
-                data-bs-target="#ProductModal"
               >
                 新增產品
               </button>
@@ -164,8 +166,6 @@ function App() {
                           <button
                             className="btn btn-primary"
                             onClick={() => openModal("edit", item)}
-                            data-bs-toggle="modal"
-                            data-bs-target="#ProductModal"
                           >
                             編輯
                           </button>
